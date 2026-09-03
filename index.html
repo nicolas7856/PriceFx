@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Travel FX PWA</title>
+    <meta name="theme-color" content="#121212">
+    <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
+</head>
+<body>
+    <header>
+        <h1>Travel FX</h1>
+        <div id="status-indicator" class="status-offline">Controllo rete...</div>
+    </header>
+
+    <nav class="tabs">
+        <button class="tab-btn active" data-target="converter">Convertitore</button>
+        <button class="tab-btn" data-target="cheatsheet">Tabella</button>
+        <button class="tab-btn" data-target="history">Cronologia</button>
+        <button class="tab-btn" data-target="settings">Setup</button>
+    </nav>
+
+    <main>
+        <section id="converter" class="tab-content active">
+            <div class="card-container">
+                <div class="card from-card">
+                    <span class="label">DA <span id="from-currency-label">JPY</span></span>
+                    <div id="input-display" class="amount">0</div>
+                </div>
+                
+                <button id="swap-btn" class="swap-btn">⇄</button>
+                
+                <div class="card to-card">
+                    <span class="label">A <span id="to-currency-label">EUR</span></span>
+                    <div id="output-base" class="amount result">0.00</div>
+                    <div id="fee-breakdown" class="fee-info">+ 0.00 commissione</div>
+                    <div id="output-total" class="total-amount">Totale: 0.00</div>
+                </div>
+            </div>
+
+            <button id="save-history-btn" class="action-btn">Salva Conversione</button>
+
+            <div class="keypad">
+                <button class="key" data-val="1">1</button>
+                <button class="key" data-val="2">2</button>
+                <button class="key" data-val="3">3</button>
+                <button class="key" data-val="4">4</button>
+                <button class="key" data-val="5">5</button>
+                <button class="key" data-val="6">6</button>
+                <button class="key" data-val="7">7</button>
+                <button class="key" data-val="8">8</button>
+                <button class="key" data-val="9">9</button>
+                <button class="key action-key" data-val="C">C</button>
+                <button class="key" data-val="0">0</button>
+                <button class="key action-key" data-val="DEL">⌫</button>
+            </div>
+        </section>
+
+        <section id="cheatsheet" class="tab-content hidden">
+            <button id="toggle-cheatsheet-btn" class="action-btn" style="margin-bottom: 1rem;">Mostra EUR ➔ JPY</button>
+            <table id="cheatsheet-table">
+                <thead>
+                    <tr>
+                        <th id="cs-col-from">JPY</th>
+                        <th>Base</th>
+                        <th id="cs-col-total">Totale (con Fee)</th>
+                    </tr>
+                </thead>
+                <tbody id="cheatsheet-body"></tbody>
+            </table>
+        </section>
+
+        <section id="history" class="tab-content hidden">
+            <button id="clear-history-btn" class="action-btn danger">Svuota Cronologia</button>
+            <ul id="history-list" class="history-list"></ul>
+        </section>
+
+        <section id="settings" class="tab-content hidden">
+            <div class="setting-group">
+                <label>Tasso di cambio (1 EUR = X JPY)</label>
+                <div class="rate-inputs">
+                    <input type="number" id="custom-rate" step="0.01">
+                    <button id="force-fetch-btn" class="action-btn small">Aggiorna da Rete</button>
+                </div>
+                <small id="last-update-text"></small>
+            </div>
+            
+            <div class="setting-group">
+                <label>Commissione Banca % (Acquisto Carta JPY ➔ EUR)</label>
+                <input type="number" id="bank-fee" step="0.1" value="2.0">
+            </div>
+
+            <div class="setting-group">
+                <label>Commissione Cambio % (Contanti EUR ➔ JPY)</label>
+                <input type="number" id="shop-fee" step="0.1" value="5.0">
+            </div>
+        </section>
+    </main>
+
+    <script src="app.js"></script>
+</body>
+</html>
