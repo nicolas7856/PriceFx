@@ -100,3 +100,13 @@ td:first-child, th:first-child { text-align: left; font-weight: bold; }
 .setting-group input { padding: 0.8rem; border: 1px solid var(--border); border-radius: 4px; background: var(--bg-color); color: var(--text-primary); font-size: 1rem; }
 .rate-inputs { display: flex; gap: 0.5rem; }
 .rate-inputs input { flex: 1; }
+
+/* Firma e Versione */
+.app-version {
+    text-align: center;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    opacity: 0.6;
+    margin-top: 2rem;
+    padding-bottom: 1rem;
+}
