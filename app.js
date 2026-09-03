@@ -1,6 +1,6 @@
 // --- STATE MANAGEMENT ---
 const state = {
-    direction: 'JPY_TO_EUR', // 'JPY_TO_EUR' | 'EUR_TO_JPY'
+    direction: 'JPY_TO_EUR',
     rate: 160.00,
     lastUpdate: null,
     inputValue: '0',
@@ -217,8 +217,16 @@ function updateHistory() {
     });
 }
 
+// --- AZIONI CONDIVISE ---
+function swapCurrencies() {
+    state.direction = state.direction === 'JPY_TO_EUR' ? 'EUR_TO_JPY' : 'JPY_TO_EUR';
+    state.inputValue = '0'; 
+    updateDOM();
+}
+
 // --- EVENT LISTENERS ---
 function setupEventListeners() {
+    // Navigazione Menu
     document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -231,6 +239,7 @@ function setupEventListeners() {
         });
     });
 
+    // Tastierino
     document.querySelectorAll('.key').forEach(btn => {
         btn.addEventListener('click', (e) => {
             const val = e.target.dataset.val;
@@ -247,12 +256,12 @@ function setupEventListeners() {
         });
     });
 
-    document.getElementById('swap-btn').addEventListener('click', () => {
-        state.direction = state.direction === 'JPY_TO_EUR' ? 'EUR_TO_JPY' : 'JPY_TO_EUR';
-        state.inputValue = '0'; 
-        updateDOM();
-    });
+    // Eventi di Swap (Pulsante e Click sulle Card)
+    document.getElementById('swap-btn').addEventListener('click', swapCurrencies);
+    document.getElementById('card-from').addEventListener('click', swapCurrencies);
+    document.getElementById('card-to').addEventListener('click', swapCurrencies);
 
+    // Altri Eventi
     document.getElementById('toggle-cheatsheet-btn').addEventListener('click', (e) => {
         state.direction = state.direction === 'JPY_TO_EUR' ? 'EUR_TO_JPY' : 'JPY_TO_EUR';
         e.target.textContent = state.direction === 'JPY_TO_EUR' ? 'Mostra EUR ➔ JPY' : 'Mostra JPY ➔ EUR';

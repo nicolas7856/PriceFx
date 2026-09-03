@@ -9,6 +9,10 @@
     --danger: #dc3545;
     --border: #ddd;
     --offline: #ff9800;
+    
+    /* Colori specifici per differenziare le card */
+    --card-input-bg: #e9f2fa;
+    --card-input-border: #bbdefb;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -18,6 +22,9 @@
         --text-primary: #e0e0e0;
         --text-secondary: #aaa;
         --border: #333;
+        
+        --card-input-bg: #0d2c4f;
+        --card-input-border: #15457a;
     }
 }
 
@@ -25,46 +32,51 @@
 
 body { background-color: var(--bg-color); color: var(--text-primary); display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
 
-header { padding: 1rem; text-align: center; background: var(--surface); border-bottom: 1px solid var(--border); flex: 0 0 auto; }
-h1 { font-size: 1.2rem; }
-
-#status-indicator { font-size: 0.8rem; margin-top: 0.5rem; display: inline-block; padding: 0.2rem 0.5rem; border-radius: 4px; }
+/* Header Ottimizzato: Layout su singola riga */
+header { padding: 0.8rem 1rem; background: var(--surface); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; flex: 0 0 auto; }
+h1 { font-size: 1.2rem; margin: 0; }
+#status-indicator { font-size: 0.8rem; padding: 0.3rem 0.6rem; border-radius: 4px; }
 .status-online { background: rgba(40, 167, 69, 0.2); color: var(--accent); }
 .status-offline { background: rgba(255, 152, 0, 0.2); color: var(--offline); }
 
 .tabs { display: flex; background: var(--surface); border-bottom: 1px solid var(--border); flex: 0 0 auto; }
-.tab-btn { flex: 1; padding: 1rem 0; border: none; background: none; color: var(--text-secondary); font-weight: bold; cursor: pointer; border-bottom: 2px solid transparent; }
+.tab-btn { flex: 1; padding: 0.8rem 0; border: none; background: none; color: var(--text-secondary); font-weight: bold; cursor: pointer; border-bottom: 2px solid transparent; }
 .tab-btn.active { color: var(--primary); border-bottom: 2px solid var(--primary); }
 
-/* Layout Base Ottimizzato */
-main { flex: 1; overflow: hidden; padding: 0.5rem; display: flex; flex-direction: column; }
+main { flex: 1; overflow: hidden; padding: 0.8rem; display: flex; flex-direction: column; }
 .tab-content { display: none; height: 100%; flex-direction: column; overflow: hidden; }
 .tab-content.active { display: flex; }
 
-/* Convertitore Layout - Spazi ridotti */
-.card-container { position: relative; display: flex; flex-direction: column; gap: 0.25rem; margin-bottom: 0.5rem; flex: 0 0 auto; }
-.card { background: var(--surface); padding: 0.8rem 1rem; border-radius: 8px; border: 1px solid var(--border); text-align: right; }
-.card .label { display: block; font-size: 0.85rem; color: var(--text-secondary); text-align: left; margin-bottom: 0.2rem; font-weight: bold; }
-.amount { font-size: 2rem; font-weight: bold; overflow-x: auto; white-space: nowrap; }
-.result { color: var(--text-secondary); font-size: 1.2rem; }
-.fee-info { font-size: 0.8rem; color: var(--danger); margin: 0.2rem 0; }
-.total-amount { font-size: 1.4rem; font-weight: bold; color: var(--primary); }
+/* Convertitore Layout */
+.card-container { position: relative; display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 0.8rem; flex: 1; justify-content: space-evenly; }
+.card { padding: 1.2rem; border-radius: 12px; text-align: right; cursor: pointer; transition: background-color 0.2s; display: flex; flex-direction: column; justify-content: center; }
+.card .label { display: block; font-size: 0.85rem; color: var(--text-secondary); text-align: left; margin-bottom: 0.4rem; font-weight: bold; }
+.amount { font-size: 2.2rem; font-weight: bold; overflow-x: auto; white-space: nowrap; }
 
-.swap-btn { position: absolute; top: 50%; left: 1rem; transform: translateY(-50%); background: var(--primary); color: white; border: none; border-radius: 50%; width: 40px; height: 40px; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1); cursor: pointer; z-index: 10; }
+/* Differenziazione Visiva */
+.from-card { background: var(--card-input-bg); border: 2px solid var(--card-input-border); }
+.to-card { background: var(--surface); border: 1px solid var(--border); }
+
+.result { color: var(--text-secondary); font-size: 1.4rem; }
+.fee-info { font-size: 0.8rem; color: var(--danger); margin: 0.3rem 0; }
+.total-amount { font-size: 1.5rem; font-weight: bold; color: var(--primary); }
+
+/* Pulsante Swap centrato e con bordo spesso per staccare dallo sfondo */
+.swap-btn { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: var(--primary); color: white; border: 4px solid var(--bg-color); border-radius: 50%; width: 48px; height: 48px; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1); cursor: pointer; z-index: 10; }
 .swap-btn:active { background: var(--primary-active); }
 
 .action-btn { width: 100%; padding: 1rem; border: none; border-radius: 8px; background: var(--primary); color: white; font-size: 1rem; font-weight: bold; cursor: pointer; margin-bottom: 1rem; }
 .action-btn.small { width: auto; padding: 0.5rem 1rem; }
 .action-btn.danger { background: var(--danger); }
 
-/* Tastierino - Adattivo all'altezza rimanente */
-.keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; margin-top: auto; flex: 1; min-height: 0; }
-.key { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 0; font-size: 1.5rem; display: flex; align-items: center; justify-content: center; cursor: pointer; font-weight: bold; color: var(--text-primary); touch-action: manipulation; }
+/* Tastierino - Dimensioni ridotte */
+.keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; flex: 0 0 auto; padding-bottom: 0.5rem; }
+.key { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; height: 55px; /* Altezza fissa ridotta */ font-size: 1.4rem; display: flex; align-items: center; justify-content: center; cursor: pointer; font-weight: bold; color: var(--text-primary); touch-action: manipulation; }
 .key:active { background: var(--border); }
 .action-key { color: var(--danger); background: rgba(220, 53, 69, 0.1); }
 
-/* Tabelle e Liste (con scrolling se necessario) */
-#cheatsheet, #history { overflow-y: auto; padding-bottom: 2rem; }
+/* Tabelle e Liste */
+#cheatsheet, #history, #settings { overflow-y: auto; padding-bottom: 2rem; }
 table { width: 100%; border-collapse: collapse; background: var(--surface); border-radius: 8px; overflow: hidden; }
 th, td { padding: 0.8rem; text-align: right; border-bottom: 1px solid var(--border); }
 th { background: rgba(0,0,0,0.05); }
@@ -77,7 +89,6 @@ td:first-child, th:first-child { text-align: left; font-weight: bold; }
 .del-history { background: transparent; border: none; color: var(--danger); font-size: 1.2rem; cursor: pointer; padding: 0.5rem; }
 
 /* Impostazioni */
-#settings { overflow-y: auto; }
 .setting-group { background: var(--surface); padding: 1rem; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 1rem; display: flex; flex-direction: column; gap: 0.5rem; }
 .setting-group input { padding: 0.8rem; border: 1px solid var(--border); border-radius: 4px; background: var(--bg-color); color: var(--text-primary); font-size: 1rem; }
 .rate-inputs { display: flex; gap: 0.5rem; }
