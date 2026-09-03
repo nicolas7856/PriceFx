@@ -1,6 +1,6 @@
 // --- CONFIGURAZIONE COSTANTI E MAPPE ---
 const API_URL = 'https://open.er-api.com/v6/latest/EUR';
-const STORAGE_KEY = 'travel_fx_state';
+const STORAGE_KEY = 'price_fx_state';
 const currencyMap = {
     'JPY': { flag: '🇯🇵', symbol: '¥' },
     'EUR': { flag: '🇪🇺', symbol: '€' }

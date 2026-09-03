@@ -1,6 +1,6 @@
 {
-  "name": "Travel FX Converter",
-  "short_name": "Travel FX",
+  "name": "Price FX Converter",
+  "short_name": "Price FX",
   "description": "Convertitore JPY/EUR offline con gestione commissioni",
   "start_url": "./index.html",
   "display": "standalone",

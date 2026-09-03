@@ -1,4 +1,4 @@
-const CACHE_NAME = 'travel-fx-cache-v4';
+const CACHE_NAME = 'price-fx-cache-v4';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',
