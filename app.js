@@ -1,3 +1,11 @@
+// --- CONFIGURAZIONE COSTANTI E MAPPE ---
+const API_URL = 'https://open.er-api.com/v6/latest/EUR';
+const STORAGE_KEY = 'travel_fx_state';
+const currencyMap = {
+    'JPY': { flag: '🇯🇵', symbol: '¥' },
+    'EUR': { flag: '🇪🇺', symbol: '€' }
+};
+
 // --- STATE MANAGEMENT ---
 const state = {
     direction: 'JPY_TO_EUR',
@@ -9,9 +17,6 @@ const state = {
     history: []
 };
 
-// Costanti
-const API_URL = 'https://open.er-api.com/v6/latest/EUR';
-const STORAGE_KEY = 'travel_fx_state';
 let autosaveTimer = null;
 
 // --- INIZIALIZZAZIONE ---
@@ -136,16 +141,23 @@ function triggerAutosave() {
 
 // --- DOM UPDATES ---
 function updateDOM() {
+    const isJpyToEur = state.direction === 'JPY_TO_EUR';
+    
+    // Aggiornamento Badge (Emoji + Testo Ingrandito)
+    const fromCurr = isJpyToEur ? 'JPY' : 'EUR';
+    const toCurr = isJpyToEur ? 'EUR' : 'JPY';
+    
+    document.getElementById('from-currency-badge').textContent = `${currencyMap[fromCurr].flag} ${fromCurr}`;
+    document.getElementById('to-currency-badge').textContent = `${currencyMap[toCurr].flag} ${toCurr}`;
+
+    // Aggiornamento Input
     const inputDisplay = document.getElementById('input-display');
-    inputDisplay.textContent = state.direction === 'JPY_TO_EUR' 
+    inputDisplay.textContent = isJpyToEur 
         ? Number(state.inputValue).toLocaleString('it-IT') 
         : state.inputValue;
 
-    document.getElementById('from-currency-label').textContent = state.direction === 'JPY_TO_EUR' ? 'JPY' : 'EUR';
-    document.getElementById('to-currency-label').textContent = state.direction === 'JPY_TO_EUR' ? 'EUR' : 'JPY';
-
+    // Calcolo ed esito Output
     const calc = calculate();
-    const isJpyToEur = state.direction === 'JPY_TO_EUR';
     
     document.getElementById('output-base').textContent = isJpyToEur 
         ? `${calc.base.toFixed(2)} €` 
@@ -222,11 +234,15 @@ function swapCurrencies() {
     state.direction = state.direction === 'JPY_TO_EUR' ? 'EUR_TO_JPY' : 'JPY_TO_EUR';
     state.inputValue = '0'; 
     updateDOM();
+    
+    // Feedback aptico (vibrazione) se supportato dall'hardware
+    if (navigator.vibrate) {
+        navigator.vibrate(50);
+    }
 }
 
 // --- EVENT LISTENERS ---
 function setupEventListeners() {
-    // Navigazione Menu
     document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -239,7 +255,6 @@ function setupEventListeners() {
         });
     });
 
-    // Tastierino
     document.querySelectorAll('.key').forEach(btn => {
         btn.addEventListener('click', (e) => {
             const val = e.target.dataset.val;
@@ -256,12 +271,11 @@ function setupEventListeners() {
         });
     });
 
-    // Eventi di Swap (Pulsante e Click sulle Card)
+    // Associazione eventi di Swap 
     document.getElementById('swap-btn').addEventListener('click', swapCurrencies);
     document.getElementById('card-from').addEventListener('click', swapCurrencies);
     document.getElementById('card-to').addEventListener('click', swapCurrencies);
 
-    // Altri Eventi
     document.getElementById('toggle-cheatsheet-btn').addEventListener('click', (e) => {
         state.direction = state.direction === 'JPY_TO_EUR' ? 'EUR_TO_JPY' : 'JPY_TO_EUR';
         e.target.textContent = state.direction === 'JPY_TO_EUR' ? 'Mostra EUR ➔ JPY' : 'Mostra JPY ➔ EUR';

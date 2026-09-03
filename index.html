@@ -24,19 +24,29 @@
     <main>
         <section id="converter" class="tab-content active">
             <div class="card-container">
-                <div class="card from-card" id="card-from">
-                    <span class="label">DA <span id="from-currency-label">JPY</span></span>
-                    <div id="input-display" class="amount">0</div>
+                
+                <div class="card-wrapper">
+                    <div class="fixed-label">DA</div>
+                    <div class="card from-card" id="card-from">
+                        <div id="from-currency-badge" class="currency-badge">🇯🇵 JPY</div>
+                        <div id="input-display" class="amount">0</div>
+                    </div>
                 </div>
                 
                 <button id="swap-btn" class="swap-btn">⇄</button>
                 
-                <div class="card to-card" id="card-to">
-                    <span class="label">A <span id="to-currency-label">EUR</span></span>
-                    <div id="output-base" class="amount result">0.00</div>
-                    <div id="fee-breakdown" class="fee-info">+ 0.00 commissione</div>
-                    <div id="output-total" class="total-amount">Totale: 0.00</div>
+                <div class="card-wrapper">
+                    <div class="fixed-label">A</div>
+                    <div class="card to-card" id="card-to">
+                        <div class="card-header-row">
+                            <div id="to-currency-badge" class="currency-badge">🇪🇺 EUR</div>
+                            <div id="output-base" class="amount result">0.00</div>
+                        </div>
+                        <div id="fee-breakdown" class="fee-info">+ 0.00 commissione</div>
+                        <div id="output-total" class="total-amount">Totale: 0.00</div>
+                    </div>
                 </div>
+
             </div>
 
             <div class="keypad">
