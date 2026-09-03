@@ -1,7 +1,7 @@
 // --- STATE MANAGEMENT ---
 const state = {
     direction: 'JPY_TO_EUR', // 'JPY_TO_EUR' | 'EUR_TO_JPY'
-    rate: 160.00, // Fallback default (1 EUR = 160 JPY)
+    rate: 160.00,
     lastUpdate: null,
     inputValue: '0',
     bankFee: 2.0,
@@ -10,8 +10,9 @@ const state = {
 };
 
 // Costanti
-const API_URL = 'https://api.frankfurter.app/latest?from=EUR&to=JPY';
+const API_URL = 'https://open.er-api.com/v6/latest/EUR';
 const STORAGE_KEY = 'travel_fx_state';
+let autosaveTimer = null;
 
 // --- INIZIALIZZAZIONE ---
 function init() {
@@ -19,7 +20,7 @@ function init() {
     registerServiceWorker();
     setupEventListeners();
     updateDOM();
-    fetchRate(); // Tenta aggiornamento silente
+    fetchRate(); 
 }
 
 // --- NETWORK E DATI ---
@@ -65,7 +66,7 @@ function loadState() {
 }
 
 function saveState() {
-    const toSave = { ...state, inputValue: '0' }; // Non salvare l'input a metà
+    const toSave = { ...state, inputValue: '0' }; 
     localStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
 }
 
@@ -75,7 +76,6 @@ function calculate() {
     if (amount === 0) return { base: 0, fee: 0, total: 0, feeText: '' };
 
     if (state.direction === 'JPY_TO_EUR') {
-        // Carta di credito: Acquisto in JPY, addebito in EUR + bank fee
         const baseEur = amount / state.rate;
         const feeAmount = baseEur * (state.bankFee / 100);
         return {
@@ -85,7 +85,6 @@ function calculate() {
             feeText: `+ ${feeAmount.toFixed(2)} € (Comm. Banca ${state.bankFee}%)`
         };
     } else {
-        // Cambio contanti: Cedi EUR, ricevi JPY - shop fee
         const baseYen = amount * state.rate;
         const feeAmount = baseYen * (state.shopFee / 100);
         return {
@@ -97,20 +96,54 @@ function calculate() {
     }
 }
 
+// --- AUTOSAVE (DEBOUNCE) ---
+function triggerAutosave() {
+    clearTimeout(autosaveTimer);
+    
+    autosaveTimer = setTimeout(() => {
+        const amt = parseFloat(state.inputValue);
+        if (amt && amt > 0) {
+            const calc = calculate();
+            
+            state.history.push({
+                time: new Date().getTime(),
+                dir: state.direction,
+                inAmount: amt,
+                outTotal: calc.total,
+                rate: state.rate,
+                fee: state.direction === 'JPY_TO_EUR' ? state.bankFee : state.shopFee
+            });
+            
+            if(state.history.length > 50) state.history.shift(); 
+            
+            saveState();
+            updateHistory(); 
+            
+            const statusEl = document.getElementById('status-indicator');
+            const oldText = statusEl.textContent;
+            const oldClass = statusEl.className;
+            
+            statusEl.textContent = "Salvato ✓";
+            statusEl.className = 'status-online';
+            
+            setTimeout(() => {
+                statusEl.textContent = oldText;
+                statusEl.className = oldClass;
+            }, 1500);
+        }
+    }, 2000);
+}
+
 // --- DOM UPDATES ---
 function updateDOM() {
-    // Aggiorna Input Display
     const inputDisplay = document.getElementById('input-display');
-    // Formattazione per la valuta di partenza
     inputDisplay.textContent = state.direction === 'JPY_TO_EUR' 
         ? Number(state.inputValue).toLocaleString('it-IT') 
         : state.inputValue;
 
-    // Etichette valuta
     document.getElementById('from-currency-label').textContent = state.direction === 'JPY_TO_EUR' ? 'JPY' : 'EUR';
     document.getElementById('to-currency-label').textContent = state.direction === 'JPY_TO_EUR' ? 'EUR' : 'JPY';
 
-    // Calcolo ed esito
     const calc = calculate();
     const isJpyToEur = state.direction === 'JPY_TO_EUR';
     
@@ -186,7 +219,6 @@ function updateHistory() {
 
 // --- EVENT LISTENERS ---
 function setupEventListeners() {
-    // Navigazione Tabs
     document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -199,7 +231,6 @@ function setupEventListeners() {
         });
     });
 
-    // Tastierino
     document.querySelectorAll('.key').forEach(btn => {
         btn.addEventListener('click', (e) => {
             const val = e.target.dataset.val;
@@ -209,50 +240,25 @@ function setupEventListeners() {
                 state.inputValue = state.inputValue.length > 1 ? state.inputValue.slice(0, -1) : '0';
             } else {
                 if (state.inputValue === '0') state.inputValue = val;
-                else if (state.inputValue.length < 10) state.inputValue += val; // Limite lunghezza
+                else if (state.inputValue.length < 10) state.inputValue += val;
             }
             updateDOM();
+            triggerAutosave();
         });
     });
 
-    // Swap Direzione
     document.getElementById('swap-btn').addEventListener('click', () => {
         state.direction = state.direction === 'JPY_TO_EUR' ? 'EUR_TO_JPY' : 'JPY_TO_EUR';
-        state.inputValue = '0'; // Reset input al cambio direzione per sicurezza
+        state.inputValue = '0'; 
         updateDOM();
     });
 
-    // Cheat Sheet Toggle
     document.getElementById('toggle-cheatsheet-btn').addEventListener('click', (e) => {
         state.direction = state.direction === 'JPY_TO_EUR' ? 'EUR_TO_JPY' : 'JPY_TO_EUR';
         e.target.textContent = state.direction === 'JPY_TO_EUR' ? 'Mostra EUR ➔ JPY' : 'Mostra JPY ➔ EUR';
         updateDOM();
     });
 
-    // Salvataggio Cronologia
-    document.getElementById('save-history-btn').addEventListener('click', () => {
-        const amt = parseFloat(state.inputValue);
-        if(!amt) return;
-        const calc = calculate();
-        
-        state.history.push({
-            time: new Date().getTime(),
-            dir: state.direction,
-            inAmount: amt,
-            outTotal: calc.total,
-            rate: state.rate,
-            fee: state.direction === 'JPY_TO_EUR' ? state.bankFee : state.shopFee
-        });
-        
-        // Mantieni solo gli ultimi 50
-        if(state.history.length > 50) state.history.shift(); 
-        
-        saveState();
-        updateDOM();
-        alert('Salvato in cronologia');
-    });
-
-    // Cancellazione Cronologia
     document.getElementById('history-list').addEventListener('click', (e) => {
         if(e.target.classList.contains('del-history')) {
             const idx = parseInt(e.target.dataset.index);
@@ -270,7 +276,6 @@ function setupEventListeners() {
         }
     });
 
-    // Impostazioni
     document.getElementById('custom-rate').addEventListener('change', (e) => {
         const val = parseFloat(e.target.value);
         if(val > 0) { state.rate = val; saveState(); updateDOM(); }
@@ -292,11 +297,10 @@ function registerServiceWorker() {
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
             navigator.serviceWorker.register('./sw.js')
-                .then(reg => console.log('SW registrato con successo', reg.scope))
-                .catch(err => console.error('Errore registrazione SW', err));
+                .then(reg => console.log('SW registrato', reg.scope))
+                .catch(err => console.error('Errore SW', err));
         });
     }
 }
 
-// Avvio
 init();
