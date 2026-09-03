@@ -104,7 +104,7 @@ td:first-child, th:first-child { text-align: left; font-weight: bold; }
 /* Firma e Versione */
 .app-version {
     text-align: center;
-    font-size: 0.75rem;
+    font-size: 0.40rem;
     color: var(--text-secondary);
     opacity: 0.6;
     margin-top: 2rem;
