@@ -182,7 +182,7 @@ function updateCheatSheet() {
     document.getElementById('cs-col-total').textContent = isJpyToEur ? 'EUR (con Fee)' : 'JPY (Netto)';
 
     const amounts = isJpyToEur 
-        ? [100, 150, 300, 500, 700, 1000, 5000, 10000, 50000, 100000, 200000, 500000] 
+        ? [100, 150, 300, 500, 700, 1000, 2000, 5000, 10000, 20000, 50000, 100000, 200000, 500000] 
         : [1, 2, 3, 5, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000];
 
     amounts.forEach(amt => {
