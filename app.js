@@ -1,17 +1,16 @@
-// --- CONFIGURAZIONE COSTANTI E MAPPE ---
 const API_URL = 'https://open.er-api.com/v6/latest/EUR';
-const STORAGE_KEY = 'price_fx_state';
+const STORAGE_KEY = 'travel_fx_state';
 const currencyMap = {
     'JPY': { flag: '🇯🇵', symbol: '¥' },
     'EUR': { flag: '🇪🇺', symbol: '€' }
 };
 
-// --- STATE MANAGEMENT ---
 const state = {
     direction: 'JPY_TO_EUR',
     rate: 160.00,
     lastUpdate: null,
     inputValue: '0',
+    expressionHistory: '',
     bankFee: 2.0,
     shopFee: 5.0,
     history: []
@@ -19,7 +18,6 @@ const state = {
 
 let autosaveTimer = null;
 
-// --- INIZIALIZZAZIONE ---
 function init() {
     loadState();
     registerServiceWorker();
@@ -28,7 +26,6 @@ function init() {
     fetchRate(); 
 }
 
-// --- NETWORK E DATI ---
 async function fetchRate() {
     const statusEl = document.getElementById('status-indicator');
     statusEl.textContent = "Aggiornamento in corso...";
@@ -71,13 +68,30 @@ function loadState() {
 }
 
 function saveState() {
-    const toSave = { ...state, inputValue: '0' }; 
+    const toSave = { ...state, inputValue: '0', expressionHistory: '' }; 
     localStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
 }
 
-// --- LOGICA DI CALCOLO ---
+// Motore di parsing AST per valutazione sicura
+function getNumericValue() {
+    try {
+        if (!state.inputValue || state.inputValue === 'Error') return 0;
+        let expr = state.inputValue.replace(/÷/g, '/').replace(/×/g, '*');
+        
+        // Rimuove operatori pendenti a fine stringa per calcolare il parziale corrente
+        if (/[+\-/*.]$/.test(expr)) {
+            expr = expr.slice(0, -1);
+        }
+        // Funzione isolata per prevenire context leakage
+        const res = new Function('"use strict"; return (' + expr + ')')();
+        return (isNaN(res) || !isFinite(res)) ? 0 : res;
+    } catch (e) {
+        return 0;
+    }
+}
+
 function calculate() {
-    const amount = parseFloat(state.inputValue) || 0;
+    const amount = getNumericValue();
     if (amount === 0) return { base: 0, fee: 0, total: 0, feeText: '' };
 
     if (state.direction === 'JPY_TO_EUR') {
@@ -101,12 +115,11 @@ function calculate() {
     }
 }
 
-// --- AUTOSAVE (DEBOUNCE) ---
 function triggerAutosave() {
     clearTimeout(autosaveTimer);
     
     autosaveTimer = setTimeout(() => {
-        const amt = parseFloat(state.inputValue);
+        const amt = getNumericValue();
         if (amt && amt > 0) {
             const calc = calculate();
             
@@ -139,24 +152,17 @@ function triggerAutosave() {
     }, 2000);
 }
 
-// --- DOM UPDATES ---
 function updateDOM() {
     const isJpyToEur = state.direction === 'JPY_TO_EUR';
-    
-    // Aggiornamento Badge (Emoji + Testo Ingrandito)
     const fromCurr = isJpyToEur ? 'JPY' : 'EUR';
     const toCurr = isJpyToEur ? 'EUR' : 'JPY';
     
     document.getElementById('from-currency-badge').textContent = `${currencyMap[fromCurr].flag} ${fromCurr}`;
     document.getElementById('to-currency-badge').textContent = `${currencyMap[toCurr].flag} ${toCurr}`;
 
-    // Aggiornamento Input
-    const inputDisplay = document.getElementById('input-display');
-    inputDisplay.textContent = isJpyToEur 
-        ? Number(state.inputValue).toLocaleString('it-IT') 
-        : state.inputValue;
+    document.getElementById('expression-display').textContent = state.expressionHistory;
+    document.getElementById('input-display').textContent = state.inputValue;
 
-    // Calcolo ed esito Output
     const calc = calculate();
     
     document.getElementById('output-base').textContent = isJpyToEur 
@@ -207,48 +213,87 @@ function updateHistory() {
     [...state.history].reverse().forEach((item, index) => {
         const li = document.createElement('li');
         li.className = 'history-item';
-        
         const date = new Date(item.time).toLocaleString('it-IT', { day: '2-digit', month: '2-digit', hour: '2-digit', minute:'2-digit' });
         
-        let html = `<div class="history-details">
-            <span class="history-time">${date}</span>`;
-            
+        let html = `<div class="history-details"><span class="history-time">${date}</span>`;
         if(item.dir === 'JPY_TO_EUR') {
             html += `<strong>${item.inAmount} ¥ ➔ ${item.outTotal.toFixed(2)} €</strong>`;
-            html += `<small>Tasso: ${item.rate} (Fee: ${item.fee}%)</small>`;
         } else {
             html += `<strong>${item.inAmount} € ➔ ${Math.round(item.outTotal)} ¥</strong>`;
-            html += `<small>Tasso: ${item.rate} (Fee: ${item.fee}%)</small>`;
         }
-        
-        html += `</div>
-            <button class="del-history" data-index="${state.history.length - 1 - index}">🗑</button>`;
-            
+        html += `<small>Tasso: ${item.rate} (Fee: ${item.fee}%)</small></div>
+                 <button class="del-history" data-index="${state.history.length - 1 - index}">🗑</button>`;
         li.innerHTML = html;
         list.appendChild(li);
     });
 }
 
-// --- AZIONI CONDIVISE ---
 function swapCurrencies() {
     state.direction = state.direction === 'JPY_TO_EUR' ? 'EUR_TO_JPY' : 'JPY_TO_EUR';
-    state.inputValue = '0'; 
+    state.inputValue = '0';
+    state.expressionHistory = '';
     updateDOM();
-    
-    // Feedback aptico (vibrazione) se supportato dall'hardware
-    if (navigator.vibrate) {
-        navigator.vibrate(50);
+    if (navigator.vibrate) navigator.vibrate(50);
+}
+
+// Controller Tastierino (Macchina a Stati)
+function handleKeypadInput(val) {
+    if (val === 'C') {
+        state.inputValue = '0';
+        state.expressionHistory = '';
+    } 
+    else if (val === 'DEL') {
+        if (state.expressionHistory) {
+            state.expressionHistory = '';
+        } else {
+            state.inputValue = state.inputValue.length > 1 ? state.inputValue.slice(0, -1) : '0';
+        }
+    } 
+    else if (val === '=') {
+        if (state.expressionHistory) return;
+        const result = getNumericValue();
+        state.expressionHistory = state.inputValue + ' =';
+        
+        // Tronca decimanli irrilevanti
+        state.inputValue = Number.isInteger(result) ? String(result) : String(parseFloat(result.toFixed(4)));
+    } 
+    else if (['+', '-', '×', '÷'].includes(val)) {
+        if (state.expressionHistory) {
+            state.expressionHistory = '';
+        }
+        // Previene operatori multipli consecutivi
+        if (/[+\-×÷.]$/.test(state.inputValue)) {
+            state.inputValue = state.inputValue.slice(0, -1) + val;
+        } else {
+            state.inputValue += val;
+        }
+    } 
+    else { // Numeri e punto
+        if (state.expressionHistory) {
+            state.inputValue = val === '.' ? '0.' : val;
+            state.expressionHistory = '';
+        } else {
+            if (state.inputValue === '0' && val !== '.') {
+                state.inputValue = val;
+            } else {
+                // Controllo per impedire punti decimali multipli nello stesso operando
+                const operands = state.inputValue.split(/[+\-×÷]/);
+                const currentOperand = operands[operands.length - 1];
+                if (val === '.' && currentOperand.includes('.')) return;
+                
+                // Hard limit a 25 caratteri per evitare overflow UI
+                if (state.inputValue.length < 25) state.inputValue += val;
+            }
+        }
     }
 }
 
-// --- EVENT LISTENERS ---
 function setupEventListeners() {
     document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active', 'hidden'));
             document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
-            
             e.target.classList.add('active');
             document.getElementById(e.target.dataset.target).classList.remove('hidden');
             document.getElementById(e.target.dataset.target).classList.add('active');
@@ -257,21 +302,12 @@ function setupEventListeners() {
 
     document.querySelectorAll('.key').forEach(btn => {
         btn.addEventListener('click', (e) => {
-            const val = e.target.dataset.val;
-            if (val === 'C') {
-                state.inputValue = '0';
-            } else if (val === 'DEL') {
-                state.inputValue = state.inputValue.length > 1 ? state.inputValue.slice(0, -1) : '0';
-            } else {
-                if (state.inputValue === '0') state.inputValue = val;
-                else if (state.inputValue.length < 10) state.inputValue += val;
-            }
+            handleKeypadInput(e.target.dataset.val);
             updateDOM();
             triggerAutosave();
         });
     });
 
-    // Associazione eventi di Swap 
     document.getElementById('swap-btn').addEventListener('click', swapCurrencies);
     document.getElementById('card-from').addEventListener('click', swapCurrencies);
     document.getElementById('card-to').addEventListener('click', swapCurrencies);
@@ -315,13 +351,10 @@ function setupEventListeners() {
     document.getElementById('force-fetch-btn').addEventListener('click', fetchRate);
 }
 
-// --- SERVICE WORKER ---
 function registerServiceWorker() {
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-            navigator.serviceWorker.register('./sw.js')
-                .then(reg => console.log('SW registrato', reg.scope))
-                .catch(err => console.error('Errore SW', err));
+            navigator.serviceWorker.register('./sw.js').catch(err => console.error('Errore SW', err));
         });
     }
 }

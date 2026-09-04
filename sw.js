@@ -1,4 +1,4 @@
-const CACHE_NAME = 'price-fx-cache-v4';
+const CACHE_NAME = 'travel-fx-cache-v5';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',
@@ -32,6 +32,7 @@ self.addEventListener('activate', event => {
 });
 
 self.addEventListener('fetch', event => {
+    // Esclude le chiamate API dal caching per garantire dati aggiornati
     if (event.request.url.includes('api.frankfurter.app') || event.request.url.includes('open.er-api.com')) {
         return;
     }
@@ -39,6 +40,7 @@ self.addEventListener('fetch', event => {
     event.respondWith(
         caches.match(event.request).then(cachedResponse => {
             if (cachedResponse) {
+                // Stale-While-Revalidate pattern
                 fetch(event.request).then(networkResponse => {
                     caches.open(CACHE_NAME).then(cache => {
                         cache.put(event.request, networkResponse);
