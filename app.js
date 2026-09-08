@@ -1,5 +1,5 @@
 const API_URL = 'https://open.er-api.com/v6/latest/EUR';
-const STORAGE_KEY = 'travel_fx_state';
+const STORAGE_KEY = 'price_fx_state'; // Modifica applicata per rebranding
 const currencyMap = {
     'JPY': { flag: '🇯🇵', symbol: '¥' },
     'EUR': { flag: '🇪🇺', symbol: '€' }
@@ -72,17 +72,14 @@ function saveState() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
 }
 
-// Motore di parsing AST per valutazione sicura
 function getNumericValue() {
     try {
         if (!state.inputValue || state.inputValue === 'Error') return 0;
         let expr = state.inputValue.replace(/÷/g, '/').replace(/×/g, '*');
         
-        // Rimuove operatori pendenti a fine stringa per calcolare il parziale corrente
         if (/[+\-/*.]$/.test(expr)) {
             expr = expr.slice(0, -1);
         }
-        // Funzione isolata per prevenire context leakage
         const res = new Function('"use strict"; return (' + expr + ')')();
         return (isNaN(res) || !isFinite(res)) ? 0 : res;
     } catch (e) {
@@ -236,7 +233,6 @@ function swapCurrencies() {
     if (navigator.vibrate) navigator.vibrate(50);
 }
 
-// Controller Tastierino (Macchina a Stati)
 function handleKeypadInput(val) {
     if (val === 'C') {
         state.inputValue = '0';
@@ -253,22 +249,19 @@ function handleKeypadInput(val) {
         if (state.expressionHistory) return;
         const result = getNumericValue();
         state.expressionHistory = state.inputValue + ' =';
-        
-        // Tronca decimanli irrilevanti
         state.inputValue = Number.isInteger(result) ? String(result) : String(parseFloat(result.toFixed(4)));
     } 
     else if (['+', '-', '×', '÷'].includes(val)) {
         if (state.expressionHistory) {
             state.expressionHistory = '';
         }
-        // Previene operatori multipli consecutivi
         if (/[+\-×÷.]$/.test(state.inputValue)) {
             state.inputValue = state.inputValue.slice(0, -1) + val;
         } else {
             state.inputValue += val;
         }
     } 
-    else { // Numeri e punto
+    else { 
         if (state.expressionHistory) {
             state.inputValue = val === '.' ? '0.' : val;
             state.expressionHistory = '';
@@ -276,12 +269,10 @@ function handleKeypadInput(val) {
             if (state.inputValue === '0' && val !== '.') {
                 state.inputValue = val;
             } else {
-                // Controllo per impedire punti decimali multipli nello stesso operando
                 const operands = state.inputValue.split(/[+\-×÷]/);
                 const currentOperand = operands[operands.length - 1];
                 if (val === '.' && currentOperand.includes('.')) return;
                 
-                // Hard limit a 25 caratteri per evitare overflow UI
                 if (state.inputValue.length < 25) state.inputValue += val;
             }
         }
@@ -302,7 +293,7 @@ function setupEventListeners() {
 
     document.querySelectorAll('.key').forEach(btn => {
         btn.addEventListener('pointerdown', (e) => {
-            e.preventDefault(); // Blocca l'emulazione ritardata del click standard
+            e.preventDefault(); 
             handleKeypadInput(e.target.dataset.val);
             updateDOM();
             triggerAutosave();

@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Travel FX PWA</title>
+    <title>Price FX PWA</title>
     <meta name="theme-color" content="#121212">
     <link rel="stylesheet" href="style.css">
     <link rel="manifest" href="manifest.json">
 </head>
 <body>
     <header>
-        <h1>Travel FX</h1>
+        <h1>Price FX</h1>
         <div id="status-indicator" class="status-offline">Controllo rete...</div>
     </header>
 
@@ -32,7 +32,6 @@
                     <div class="card from-card" id="card-from">
                         <div class="card-header-row">
                             <div id="from-currency-badge" class="currency-badge">🇯🇵 JPY</div>
-                            <!-- Sub-display per l'espressione calcolata -->
                             <div id="expression-display" class="expression-history"></div>
                         </div>
                         <div id="input-display" class="amount">0</div>
@@ -56,7 +55,7 @@
 
             </div>
 
-            <!-- Nuovo Tastierino Matrice 4x5 -->
+            <!-- Tastierino -->
             <div class="keypad">
                 <button class="key action-key" data-val="C">C</button>
                 <button class="key action-key" data-val="DEL">⌫</button>
@@ -81,7 +80,6 @@
                 <button class="key" data-val="0">0</button>
                 <button class="key" data-val="00">00</button>
                 <button class="key" data-val=".">.</button>
-                <!-- L'uguale copre lo spazio rimanente tramite CSS Grid -->
             </div>
         </section>
 
@@ -130,7 +128,7 @@
             </div>
 
             <div class="app-version">
-                v2.4 - by NC
+                v2.5 - by NC
             </div>
         </section>
     </main>
