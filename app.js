@@ -301,7 +301,8 @@ function setupEventListeners() {
     });
 
     document.querySelectorAll('.key').forEach(btn => {
-        btn.addEventListener('click', (e) => {
+        btn.addEventListener('pointerdown', (e) => {
+            e.preventDefault(); // Blocca l'emulazione ritardata del click standard
             handleKeypadInput(e.target.dataset.val);
             updateDOM();
             triggerAutosave();
